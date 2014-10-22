@@ -87,7 +87,9 @@ function Get-Product
         [string]$SearchOption,
         [string]$ProductTitleOrId
     )
-    $list = webpicmd /list /ListOption:$SearchOption
+    $webpicmdexe = "$env:ProgramW6432\Microsoft\Web Platform Installer\WebpiCmd.exe"
+    $arg = @("/List", "/ListOption:$SearchOption")
+    $list = & $webpicmdexe $arg
     foreach($entry in $list)
     {
         [hashtable]$product = @{}
@@ -97,10 +99,10 @@ function Get-Product
             $product.ID = $split[0]
             $product.Title = $split[1]
         }
-        elseif($split.Length -eq 3) #The product title itself can have a space
+        elseif($split.Length -gt 2) #The product title itself can have a space
         {
             $product.ID = $split[0]
-            $product.Title = [System.String]::Concat($split[1], $split[2])
+            $product.Title = [System.String]::Join(' ', $split, 1, $split.Length - 1)
         }
         if(($product.ID -eq $ProductTitleOrId) -or ($product.Title -eq $ProductTitleOrId))
         {
