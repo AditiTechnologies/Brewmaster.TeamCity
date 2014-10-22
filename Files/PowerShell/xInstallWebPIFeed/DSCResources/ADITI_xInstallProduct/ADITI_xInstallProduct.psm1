@@ -42,15 +42,19 @@ function Set-TargetResource
         [string] $ProductTitleOrId
   	)
    	
-	Assert-WebPIAvailable
+	$webpicmdexe = "$env:ProgramW6432\Microsoft\Web Platform Installer\WebpiCmd.exe"
+    if(!(Test-Path $webpicmdexe))
+    {
+        throw "Web Platform Installer not available"
+    }
     $product = Get-Product -SearchOption "Available" -ProductTitleOrId $ProductTitleOrId
-    if(!$product)
+    if($product -eq $null)
     {
         throw "Could not find any product with ID or Title matching with $ProductTitleOrId"
     }
     Write-Verbose "Installing $ProductTitleOrId"
     $arg = @( "/Install", "/Products:$ProductTitleOrId", "/AcceptEula", "/SuppressReboot", "/Log:$env:BrewmasterDir\Logs\$ProductTitleOrId.log")
-    & "webpicmd" $arg
+    & $webpicmdexe $arg
 }
 
 #
@@ -104,14 +108,6 @@ function Get-Product
         }
     }
     return $null
-}
-
-function Assert-WebPIAvailable
-{
-    if(!(Test-Path "$env:ProgramW6432\Microsoft\Web Platform Installer\WebpiCmd.exe"))
-    {
-        throw "Web Platform Installer not available"
-    }
 }
 
 Export-ModuleMember -Function *-TargetResource
