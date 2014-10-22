@@ -156,7 +156,8 @@
             ],
             "ConfigurationIds": [
 				"InstallTeamCity",
-				"ConfigureTeamCity"
+				"ConfigureTeamCity",
+				"SetupDotNetCloudBuildEnvironment"
 			]
         }        
     ],
@@ -174,20 +175,6 @@
                         "FirstDriveLetter": "F"
                     }
                 },
-				{
-				  "Type": "Package",
-				  "ImportModule": null,
-				  "ImportTypeName": null,
-				  "Name": "InstallWebPI",
-				  "Args": {
-					"Credential": "vmadmin",
-					"Name": "Microsoft Web Platform Installer 4.6",
-					"ProductId": "16C7D2AD-20CA-491E-80BC-8607A9AACED9",
-					"Path": "http://download.microsoft.com/download/7/0/4/704CEB4C-9F42-4962-A2B0-5C84B0682C7A/WebPlatformInstaller_amd64_en-US.msi",
-					"LogPath": "%BrewmasterDir%\\Logs\\WebPlatformInstaller_amd64_en-US.log",
-					"Ensure": "Present"
-				  }
-				},
 				{
 					"Type": "Package",
                     "ImportModule": null,
@@ -272,6 +259,38 @@
 					},
 					"Requires": [
 						"[xTeamCityFirstStart]TeamCityFirstStart"
+					]
+				}
+			]
+		},
+		{
+			"Name": "SetupDotNetCloudBuildEnvironment",
+			"Description": "Setup build environment via installing requisite dependencies for building and deploying .NET cloud projects.",
+			"Resources": [
+				{
+				  "Type": "Package",
+				  "ImportModule": null,
+				  "ImportTypeName": null,
+				  "Name": "InstallWebPI",
+				  "Args": {
+					"Credential": "vmadmin",
+					"Name": "Microsoft Web Platform Installer 4.6",
+					"ProductId": "16C7D2AD-20CA-491E-80BC-8607A9AACED9",
+					"Path": "http://download.microsoft.com/download/7/0/4/704CEB4C-9F42-4962-A2B0-5C84B0682C7A/WebPlatformInstaller_amd64_en-US.msi",
+					"LogPath": "%BrewmasterDir%\\Logs\\WebPlatformInstaller_amd64_en-US.log",
+					"Ensure": "Present"
+				  }
+				},
+				{
+					"Type": "xInstallProduct",
+                    "ImportModule": "xInstallWebPIFeed",
+                    "ImportTypeName": "ADITI_xInstallProduct",
+                    "Name": "InstallAzurePowershell",
+					"Args": {
+						"ProductTitleOrId": "WindowsAzurePowershell"
+					},
+					"Requires": [
+						"[Package]InstallWebPI"
 					]
 				}
 			]
