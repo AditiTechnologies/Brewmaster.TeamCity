@@ -14,7 +14,7 @@
             "Type": "String",
             "TypeHint": "AzureAffinityGroupName",
             "Description": "Azure affinity group to which the infrastructure will be deployed."
-        },        
+        },
         {
             "Name": "DiskStore",
             "Type": "String",
@@ -26,14 +26,14 @@
             "Type": "String",
             "TypeHint": "AzureCloudServiceName",
             "Description": "Name of the Azure Cloud Service to which Teamcity VM is to be deployed. Will be created only if it does not already exists. If it exists then it should lie in the specified affinity group."
-        },        
+        },
         {
             "Name": "VMSize",
             "Type": "String",
             "TypeHint": "AzureRoleSize",
             "Description": "Size of the Teamcity VM.",
             "Default": "Small"
-        },        
+        },
         {
             "Name": "AdminName",
             "Type": "String",
@@ -51,29 +51,29 @@
             "Minimum": 8,
             "Maximum": 127
         },
-		{
+        {
             "Name": "TeamCityVersion",
-            "Type": "String",            
+            "Type": "String",
             "Description": "Product Version of TeamCity.",
             "Default": "8.1.5"
         },
-		{
+        {
             "Name": "TeamCityConnectionPort",
-            "Type": "Number",            
-            "Description": "Port for accessing of TeamCity Web UI.",            
+            "Type": "Number",
+            "Description": "Port for accessing of TeamCity Web UI.",
             "Default": 8111
         },
-		{
+        {
             "Name": "TeamCityDataDiskSizeInGB",
-            "Type": "Number",            
-            "Description": "Disk size for TeamCity data directory.",            
+            "Type": "Number",
+            "Description": "Disk size for TeamCity data directory.",
             "Default": 40
         },
-		{
+        {
             "Name": "UseInternalHSQLDBEngine",
-            "Type": "Boolean",            
+            "Type": "Boolean",
             "Description": "Specifies whether to create Teamcity database using the internal HSQLDB database engine.",
-			"TypeHint": "boolean",
+            "TypeHint": "boolean",
             "Default": "true"
         }
     ],
@@ -81,7 +81,7 @@
         "DnsServers": [],
         "LocalSites": [],
         "VirtualSites": [],
-		"ReservedIPs": []
+        "ReservedIPs": []
     },
     "AffinityGroup": {
         "Name": "{{AffinityGroup}}",
@@ -96,22 +96,22 @@
             "Description": "A non-georedundant disk store",
             "DisableGeoReplication": true
         }
-    ],	
+    ],
     "CloudServices": [
         {
             "Name": "{{TeamCityCloudService}}",
             "AffinityGroup": "{{AffinityGroup}}",
             "Region": "{{Region}}",
             "Description": "Teamcity Setup",
-            "Deployment": {                
+            "Deployment": {
                 "VirtualMachines": [
                     {
                         "Name": "teamcity1",
                         "RoleSize": "{{VMSize}}",
-						"AvailabilitySet": "teamcity-avs",
+                        "AvailabilitySet": "teamcity-avs",
                         "OsVirtualDisk": {
                             "OsType": "Windows",
-                            "OsImageName": "0c0083a6d9a24f2d91800e52cad83950__JDK*"
+                            "OsImageName": "a699494373c04fc0bc8f2bb1389d6106__Windows-Server-2012-R2-*"
                         },
                         "DataVirtualDisks": [
                             {
@@ -132,10 +132,10 @@
                     }
                 ],
                 "DiskStorageAccount": "{{DiskStore}}"
-            }                          
+            }
         }
-    ],   
-    "Credentials": [        
+    ],
+    "Credentials": [
         {
             "Name": "vmadmin",
             "UserName": "{{AdminName}}",
@@ -151,22 +151,81 @@
                     "Name": "TeamcityWebUI",
                     "LocalPort": "{{TeamCityConnectionPort}}",
                     "Protocol": "tcp",
-                    "Port": "{{TeamCityConnectionPort}}"                                
+                    "Port": "{{TeamCityConnectionPort}}"
                 }
             ],
             "ConfigurationIds": [
-				"InstallTeamCity",
-				"ConfigureTeamCity",
-				"SetupDotNetCloudBuildEnvironment"
-			]
-        }        
+                "SetupJDK",
+                "InstallTeamCity",
+                "ConfigureTeamCity",
+                "SetupDotNetCloudBuildEnvironment"
+            ]
+        }
     ],
     "Configurations": [
-		{
-			"Name": "InstallTeamCity",
-			"Description": "Teamcity server installation",
-			"Resources": [
-				{
+        {
+            "Name": "SetupJDK",
+            "Description": "Install and configure JDK.",
+            "Resources": [
+                {
+                    "Type": "File",
+                    "ImportModule": null,
+                    "ImportTypeName": null,
+                    "Name": "JDKSetupFolder",
+                    "Args": {
+                        "Type": "Directory",
+                        "DestinationPath": "C:\\JDKSetup",
+                        "Ensure": "Present"
+                    }
+                },
+                {
+                    "Credential": "vmadmin",
+                    "GetScript": "return @{ Downloaded = Test-Path -LiteralPath \"C:\\JDKSetup\\jdk1.8.0_11.zip\" -PathType Leaf }",
+                    "SetScript": "Write-Verbose \"Downloading JDK...\" -Verbose\r\nInvoke-WebRequest 'http://apselasticsearchdev.blob.core.windows.net/brewmasterinstallers/jdk1.8.0_11.zip' -OutFile \"C:\\JDKSetup\\jdk1.8.0_11.zip\"",
+                    "TestScript": "if (Test-Path -LiteralPath \"C:\\JDKSetup\\jdk1.8.0_11.zip\" -PathType Leaf)\r\n{Write-Verbose \"C:\\JDKSetup\\jdk1.8.0_11.zip already exists.\" -Verbose\r\nreturn $true}\r\nreturn $false",
+                    "Type": "Script",
+                    "ImportModule": null,
+                    "ImportTypeName": null,
+                    "Name": "DownloadJDK",
+                    "Requires": [
+                        "[File]JDKSetupFolder"
+                    ]
+                },
+                {
+                    "Type": "Archive",
+                    "ImportModule": null,
+                    "ImportTypeName": null,
+                    "Name": "UnpackJDK",
+                    "Args": {
+                        "Path": "C:\\JDKSetup\\jdk1.8.0_11.zip",
+                        "Destination": "%ProgramFiles%",
+                        "Ensure": "Present"
+                    },
+                    "Requires": [
+                        "[Script]DownloadJDK"
+                    ]
+                },
+                {
+                    "Type": "Environment",
+                    "ImportModule": null,
+                    "ImportTypeName": null,
+                    "Name": "SetJavaHome",
+                    "Args": {
+                        "Name": "JAVA_HOME",
+                        "Value": "%ProgramFiles%\\jdk1.8.0_11\\",
+                        "Ensure": "Present"
+                    },
+                    "Requires": [
+                        "[Archive]UnpackJDK"
+                    ]
+                }
+            ]
+        },
+        {
+            "Name": "InstallTeamCity",
+            "Description": "Teamcity server installation",
+            "Resources": [
+                {
                     "Type": "xFormatDisks",
                     "ImportModule": "xAzureDataDisks",
                     "ImportTypeName": "ADITI_xFormatDisks",
@@ -175,35 +234,35 @@
                         "FirstDriveLetter": "F"
                     }
                 },
-				{
-					"Type": "Package",
+                {
+                    "Type": "Package",
                     "ImportModule": null,
                     "ImportTypeName": null,
                     "Name": "SevenZipTool",
                     "Args": {
-                        "Path":"http://downloads.sourceforge.net/sevenzip/7z920.msi",
+                        "Path": "http://downloads.sourceforge.net/sevenzip/7z920.msi",
                         "Name": "7-Zip 9.20",
-						"ProductId": "",
-						"Arguments": "LicenseAccepted=1",
+                        "ProductId": "",
+                        "Arguments": "LicenseAccepted=1",
                         "Ensure": "Present"
                     }
-				},
-				{
-				  "Type": "xFirewall",
-				  "ImportModule": "xNetworking",
-				  "ImportTypeName": "MSFT_xFirewall",
-				  "Name": "OpenWebAccessPort",
-				  "Args": {
-					"Name": "TeamcityWebAccess",
-					"Description": "Teamcity online portal access",
-					"LocalPort": "{{TeamCityConnectionPort}}",
-					"Protocol": "TCP",
-					"Access": "Allow",
-					"State": "Enabled",
-					"Direction": "Inbound"
-				  }
-				},
-				{
+                },
+                {
+                    "Type": "xFirewall",
+                    "ImportModule": "xNetworking",
+                    "ImportTypeName": "MSFT_xFirewall",
+                    "Name": "OpenWebAccessPort",
+                    "Args": {
+                        "Name": "TeamcityWebAccess",
+                        "Description": "Teamcity online portal access",
+                        "LocalPort": "{{TeamCityConnectionPort}}",
+                        "Protocol": "TCP",
+                        "Access": "Allow",
+                        "State": "Enabled",
+                        "Direction": "Inbound"
+                    }
+                },
+                {
                     "Type": "xInstallTeamCity",
                     "ImportModule": "xTeamCity",
                     "ImportTypeName": "ADITI_xInstallTeamCity",
@@ -215,85 +274,85 @@
                         "TeamCityConnectionPort": "%%{{TeamCityConnectionPort}}"
                     },
                     "Requires": [
-						"[xFormatDisks]FormatRawDisks",
+                        "[xFormatDisks]FormatRawDisks",
                         "[Package]SevenZipTool"
                     ]
                 }
-			]
-		},
-		{
-			"Name": "ConfigureTeamCity",
-			"Description": "Configure Teamcity server",
-			"Resources": [
-				{
-					"Type": "xWaitForTeamCityService",
+            ]
+        },
+        {
+            "Name": "ConfigureTeamCity",
+            "Description": "Configure Teamcity server",
+            "Resources": [
+                {
+                    "Type": "xWaitForTeamCityService",
                     "ImportModule": "xTeamCity",
                     "ImportTypeName": "ADITI_xWaitForTeamCityService",
                     "Name": "WaitForTeamCityService",
-					"Args": {
-						"RetryCount":"%%10",
-						"RetryIntervalSec":"%%12",
-						"TeamCityConnectionPort": "%%{{TeamCityConnectionPort}}"
-					}					
-				},
-				{
-					"Type": "xTeamCityFirstStart",
+                    "Args": {
+                        "RetryCount": "%%10",
+                        "RetryIntervalSec": "%%12",
+                        "TeamCityConnectionPort": "%%{{TeamCityConnectionPort}}"
+                    }
+                },
+                {
+                    "Type": "xTeamCityFirstStart",
                     "ImportModule": "xTeamCity",
                     "ImportTypeName": "ADITI_xTeamCityFirstStart",
                     "Name": "TeamCityFirstStart",
-					"Args": {
-						"TeamCityConnectionPort": "%%{{TeamCityConnectionPort}}"
-					},
-					"Requires": [
-						"[xWaitForTeamCityService]WaitForTeamCityService"
-					]
-				},
-				{
-					"Type": "xTeamCityDbSetup",
+                    "Args": {
+                        "TeamCityConnectionPort": "%%{{TeamCityConnectionPort}}"
+                    },
+                    "Requires": [
+                        "[xWaitForTeamCityService]WaitForTeamCityService"
+                    ]
+                },
+                {
+                    "Type": "xTeamCityDbSetup",
                     "ImportModule": "xTeamCity",
                     "ImportTypeName": "ADITI_xTeamCityDbSetup",
                     "Name": "TeamCityDbSetup",
-					"Args": {
-						"TeamCityConnectionPort": "%%{{TeamCityConnectionPort}}",
-						"UseInternalDb": "%%${{UseInternalHSQLDBEngine}}"
-					},
-					"Requires": [
-						"[xTeamCityFirstStart]TeamCityFirstStart"
-					]
-				}
-			]
-		},
-		{
-			"Name": "SetupDotNetCloudBuildEnvironment",
-			"Description": "Setup build environment via installing requisite dependencies for building and deploying .NET cloud projects.",
-			"Resources": [
-				{
-				  "Type": "Package",
-				  "ImportModule": null,
-				  "ImportTypeName": null,
-				  "Name": "InstallWebPI",
-				  "Args": {
-					"Credential": "vmadmin",
-					"Name": "Microsoft Web Platform Installer 4.6",
-					"ProductId": "16C7D2AD-20CA-491E-80BC-8607A9AACED9",
-					"Path": "http://download.microsoft.com/download/7/0/4/704CEB4C-9F42-4962-A2B0-5C84B0682C7A/WebPlatformInstaller_amd64_en-US.msi",
-					"LogPath": "%BrewmasterDir%\\Logs\\WebPlatformInstaller_amd64_en-US.log",
-					"Ensure": "Present"
-				  }
-				},
-				{
-					"Type": "xInstallProduct",
+                    "Args": {
+                        "TeamCityConnectionPort": "%%{{TeamCityConnectionPort}}",
+                        "UseInternalDb": "%%${{UseInternalHSQLDBEngine}}"
+                    },
+                    "Requires": [
+                        "[xTeamCityFirstStart]TeamCityFirstStart"
+                    ]
+                }
+            ]
+        },
+        {
+            "Name": "SetupDotNetCloudBuildEnvironment",
+            "Description": "Setup build environment via installing requisite dependencies for building and deploying .NET cloud projects.",
+            "Resources": [
+                {
+                    "Type": "Package",
+                    "ImportModule": null,
+                    "ImportTypeName": null,
+                    "Name": "InstallWebPI",
+                    "Args": {
+                        "Credential": "vmadmin",
+                        "Name": "Microsoft Web Platform Installer 4.6",
+                        "ProductId": "16C7D2AD-20CA-491E-80BC-8607A9AACED9",
+                        "Path": "http://download.microsoft.com/download/7/0/4/704CEB4C-9F42-4962-A2B0-5C84B0682C7A/WebPlatformInstaller_amd64_en-US.msi",
+                        "LogPath": "%BrewmasterDir%\\Logs\\WebPlatformInstaller_amd64_en-US.log",
+                        "Ensure": "Present"
+                    }
+                },
+                {
+                    "Type": "xInstallProduct",
                     "ImportModule": "xInstallWebPIFeed",
                     "ImportTypeName": "ADITI_xInstallProduct",
                     "Name": "InstallAzurePowershell",
-					"Args": {
-						"ProductTitleOrId": "WindowsAzurePowershell"
-					},
-					"Requires": [
-						"[Package]InstallWebPI"
-					]
-				}
-			]
-		}
-	]
+                    "Args": {
+                        "ProductTitleOrId": "WindowsAzurePowershell"
+                    },
+                    "Requires": [
+                        "[Package]InstallWebPI"
+                    ]
+                }
+            ]
+        }
+    ]
 }
