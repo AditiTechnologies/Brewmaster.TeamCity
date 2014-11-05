@@ -347,7 +347,7 @@
                     "ImportTypeName": "null",
                     "Name": "InstallAzurePowershell",
 					"ScriptFileName": "InstallProduct.ps1",
-                    "Args": "-ProductId WindowsAzurePowershell -Log $env:BrewmasterDir\\Logs\\WindowsAzurePowershell.log",
+                    "Args": "-ProductId \"WindowsAzurePowershell\" -Log \"$env:BrewmasterDir\\Logs\\WindowsAzurePowershell.log\"",
                     "Requires": [
                         "[Package]InstallWebPI"
                     ]
