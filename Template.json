@@ -342,9 +342,9 @@
                 },
                 {
 					"Credential": "vmadmin",
-                    "Type": "ScriptFile",
-                    "ImportModule": "null",
-                    "ImportTypeName": "null",
+					"Type": "ScriptFile",
+                    "ImportModule": null,
+                    "ImportTypeName": null,
                     "Name": "InstallAzurePowershell",
 					"ScriptFileName": "InstallProduct.ps1",
                     "Args": "-ProductId \"WindowsAzurePowershell\" -Log \"$env:BrewmasterDir\\Logs\\WindowsAzurePowershell.log\"",
