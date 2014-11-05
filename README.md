@@ -9,7 +9,8 @@ One VM will be created with a dedicated data disk for storing TeamCity data.The 
 2.Web Portal - `http://<TeamCityCloudService>.cloudapp.net:<TeamCityConnectionPort>`
 
 ###Limitations
-The template does not setup the administrator account. As soon as the template completes execution, access the TeamCity web portal immediately to setup the administrator. On first accessing the TeamCity web portal you will prompted with a 'License Agreement' page. Upon accepting the agreement you will be taken to the page for setting up administrator.
+1. The template does not configure authentication settings. If you plan to use the built-in authentication module do make sure to configure SSL. 
+2. Since the template does not configure authentication settings, the TeamCity web portal will be anonymously accessible. As a preventive measure, as soon as the template completes execution, access the TeamCity web portal immediately to setup a administrator (will use built-in authentication). On first accessing the TeamCity web portal you will prompted with a 'License Agreement' page. Upon accepting the agreement you will be taken to the page for setting up administrator.
 
 ###References
 Please refer to the following links for more information on TeamCity installation and configuration.
